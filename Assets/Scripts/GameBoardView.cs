@@ -159,17 +159,25 @@ public class GameBoardView : MonoBehaviour
     /// </summary>
     /// <param name="isWin"></param>
     /// <param name="isDefault"></param>
-    public void UpdateRestartButtonWinLoseStatus(bool isWin,bool isDefault=false)
+    public void UpdateRestartButtonWinLoseStatus(bool isWin,bool isDefault=false,bool isTie=false)
     {
         if (isDefault)
             _restartButton.image.sprite = _restartButtonSprites[2];
         
         else
         {
-            if (isWin)
-                _restartButton.image.sprite = _restartButtonSprites[0];
+            if (isTie)
+            {
+                _restartButton.image.sprite = _restartButtonSprites[3];
+            }
             else
-                _restartButton.image.sprite = _restartButtonSprites[1];
+            {
+                if (isWin)
+                    _restartButton.image.sprite = _restartButtonSprites[0];
+                else
+                    _restartButton.image.sprite = _restartButtonSprites[1];
+            }
+
         }
 
 

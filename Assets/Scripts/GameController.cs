@@ -130,7 +130,7 @@ public class GameController : MonoBehaviour
 
         m_currentCachedWidth = width;
         m_currentCachedHeight = height;
-        m_currentCachedMinesCount = Random.Range(0, width * height);
+        m_currentCachedMinesCount = Random.Range(1, width * height);
 
         GenerateLevel(width, height);
     }
@@ -436,7 +436,7 @@ public class GameController : MonoBehaviour
         IsGameOver = true;
         m_currentFlaggedMinesCount = 0;
 
-        m_gameBoardView.UpdateRestartButtonWinLoseStatus(true);
+        m_gameBoardView.UpdateRestartButtonWinLoseStatus(false,false,true);
         m_gameBoardView.UpdateAutoplayToggleStatus(true);
 
 
@@ -447,6 +447,22 @@ public class GameController : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Game Tie Condition When there's no Valid blocks available for Autoplay
+    /// </summary>
+    void TieGameCondition()
+    {
+        IsGameStarted = false;
+        IsGameOver = true;
+        m_currentFlaggedMinesCount = 0;
+
+        m_gameBoardView.UpdateRestartButtonWinLoseStatus(true);
+        m_gameBoardView.UpdateAutoplayToggleStatus(true);
+
+
+        if (CanOpenAllMinesAtGameEnd)
+            RevealAllAvailableMines();
+    }
 
 
     /// <summary>
@@ -583,7 +599,14 @@ public class GameController : MonoBehaviour
     {
 
 
-       if(IsAllValidBlocksRevealed())
+        if (!IsBlocksAvailableForAutoPlay())
+        {
+            TieGameCondition();
+            return;
+
+        }
+
+        if (IsAllValidBlocksRevealed())
         {
             Debug.Log("ALL VALID BLOCKS ARE REVEALED!!");
             return;
@@ -657,6 +680,12 @@ public class GameController : MonoBehaviour
     public void SetFlagOnRandomBlockAutoPlay(int xPosition,int yPosition)
     {
 
+        if (!IsBlocksAvailableForAutoPlay())
+        {
+            TieGameCondition();
+           return;
+        
+        }
 
 
         if (IsAllValidBlocksRevealed())
@@ -719,6 +748,23 @@ public class GameController : MonoBehaviour
 
         IsValidBlocksAvailable = false;
         return true;
+    }
+
+    bool IsBlocksAvailableForAutoPlay()
+    {
+        for (int i = 0; i < m_currentCachedWidth; i++)
+        {
+            for (int j = 0; j < m_currentCachedHeight; j++)
+            {
+                if (!m_blocksCurrentGameState[i, j].isBlockRevealed || m_blocksCurrentGameState[i, j]._blockType != BLOCK_TYPE.MINE || !m_blocksCurrentGameState[i, j].isBlockFlagged)
+                {
+                    return true;
+                }
+
+            }
+        }
+
+        return false;
     }
 
 
@@ -792,7 +838,6 @@ public class GameController : MonoBehaviour
 
                 if (!MinesweeperUtility.IsValidIndex(adjacentXPos, adjacentYPos, m_currentCachedWidth, m_currentCachedHeight))
                     continue;
-
 
                 adjancyBlocks.Add(m_blocksCurrentGameState[adjacentXPos, adjacentYPos]);
 

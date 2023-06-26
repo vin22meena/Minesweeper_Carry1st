@@ -784,6 +784,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e8f486e8ef2b38b4da211140c82d5825, type: 3}
   - {fileID: 21300000, guid: dba1f5fdef4449243bc476eccf939325, type: 3}
   - {fileID: 21300000, guid: 9e77c22de7aa8014584a8c2fc0bc830e, type: 3}
+  - {fileID: 21300000, guid: ac35c127a4d985d4f802fbef1fad664a, type: 3}
   _timeCounterText: {fileID: 3219594909092656389}
   _remainingMinesCountText: {fileID: 2900042767542167357}
   _restartButton: {fileID: 2421088825468631075}

@@ -8,7 +8,7 @@ public class AutoPlayCommandManager : MonoBehaviour
 {
     [Header("SETTINGS")]
     [SerializeField] GameController _gameController;
-    [SerializeField][Tooltip("Change this value to manage speed of running steps for Autoplay Feature")] float _timeDelayInBetweenCommands = 0.5f;
+    [SerializeField][Tooltip("Change this value to manage speed of running steps for Autoplay")] float _timeDelayInBetweenCommands = 0.5f;
 
 
     Command m_currentCommand;
@@ -129,7 +129,7 @@ public class AutoPlayCommandManager : MonoBehaviour
             {
                 for(int j=0;j<currentGameState.GetLength(1);j++)
                 {
-                    if (currentGameState[i,j]._blockType==BLOCK_TYPE.NUMBER)
+                    if (currentGameState[i,j]._blockType==BLOCK_TYPE.NUMBER && currentGameState[i, j].isBlockRevealed)
                     {
                         List<Block> adjancy = gameController.GetAdjancyBlocksAutoPlay(currentGameState[i, j]);
 
