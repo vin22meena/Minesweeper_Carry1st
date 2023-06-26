@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Minesweeper Utility Class
+/// </summary>
 public static class MinesweeperUtility
 {
 

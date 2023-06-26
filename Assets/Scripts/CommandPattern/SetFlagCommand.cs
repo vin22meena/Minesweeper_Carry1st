@@ -1,4 +1,7 @@
 
+/// <summary>
+/// SetFlag Command, Manage Autoplay Set Flag Functionality
+/// </summary>
 public class SetFlagCommand : Command
 {
 

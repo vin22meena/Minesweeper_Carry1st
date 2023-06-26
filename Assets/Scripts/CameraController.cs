@@ -1,15 +1,16 @@
 using System;
 using UnityEngine;
 
+/// <summary>
+/// Responsible for Camera Move, Zoom and Auto Set Dimension based on Grid Size.
+/// </summary>
 public class CameraController : MonoBehaviour
 {
-
+    [Header("CAMERA SETTINGS")]
     [SerializeField] GameInput _gameInput;
-    [SerializeField] [Range(20f,50f)]float _maxZoom;
-    [SerializeField][Range(5f,15f)] float _minZoom;
+    [SerializeField] [Range(20f,100f)]float _maxZoom;
+    [SerializeField][Range(5f,20f)] float _minZoom;
     [SerializeField][Range(0.01f,1f)] float _moveSpeed;
-    
-
 
     Camera m_camera;
 
@@ -21,6 +22,11 @@ public class CameraController : MonoBehaviour
         m_camera = Camera.main;
     }
 
+
+    /// <summary>
+    /// Get Current Cached Camera
+    /// </summary>
+    /// <returns></returns>
     public Camera GetCurrentCamera()
     {
         return m_camera;
@@ -31,9 +37,6 @@ public class CameraController : MonoBehaviour
     {
         if (_gameInput == null)
             return;
-
-
-
 
 
         if (Input.GetKeyDown(_gameInput._cameraMoveKey))
@@ -56,6 +59,10 @@ public class CameraController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Moving the Camera Throughout the Game. Currently Pan Area Code is not implemented.
+    /// </summary>
+    /// <param name="panPosition"></param>
     void MoveCamera(Vector3 panPosition)
     {
         Vector3 movePos = panPosition-m_lastPosition;
@@ -65,6 +72,10 @@ public class CameraController : MonoBehaviour
         m_lastPosition = panPosition;
     }
 
+    /// <summary>
+    /// Zooming In and Out the Camera my Mouse Scroll
+    /// </summary>
+    /// <param name="scrollDelta"></param>
     void ZoomCamera(Vector3 scrollDelta)
     {
         m_zoomAmount += scrollDelta.y;
@@ -76,7 +87,12 @@ public class CameraController : MonoBehaviour
     }
 
 
-
+    /// <summary>
+    /// Detecting mid of Grid and updating the Camera Position By Default at Start.
+    /// </summary>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
+    /// <returns></returns>
     public bool SetCameraDimension(int width, int height)
     {
         try

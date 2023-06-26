@@ -1,14 +1,23 @@
 using UnityEngine;
 
+/// <summary>
+/// Responsible for GameInput Management
+/// </summary>
 public class GameInput : MonoBehaviour
 {
 
-
-    public KeyCode _cameraMoveKey = KeyCode.LeftShift;
+    [Header("GAME INPUT SETTINGS")]
+    public KeyCode _cameraMoveKey;
     public KeyCode _cameraZoomKey;
 
+    /// <summary>
+    /// Block Open Key
+    /// </summary>
     public bool IsBlockOpenKeyPressed { get; private set; }
 
+    /// <summary>
+    /// Block Flag Key
+    /// </summary>
     public bool IsBlockMarkFlagKeyPressed { get; private set; }
 
 

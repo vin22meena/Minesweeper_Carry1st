@@ -1,4 +1,7 @@
 
+/// <summary>
+/// Base Command Class, Used for Command Pattern
+/// </summary>
 public abstract class Command
 {
     public bool IsExecuting { get; set; }

@@ -1,7 +1,9 @@
 
+/// <summary>
+/// Reveal Command, Manage Autoplay Reveal Functionality
+/// </summary>
 public class RevealCommand : Command
 {
-
 
     public override void PreExecute()
     {

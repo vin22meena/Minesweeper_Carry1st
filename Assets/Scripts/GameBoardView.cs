@@ -6,20 +6,27 @@ using UnityEngine.Events;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
+/// <summary>
+/// Responsible for Drawing Block Grid and Updating based on Current Game State.
+/// </summary>
 [RequireComponent(typeof(Tilemap))]
 public class GameBoardView : MonoBehaviour
 {
 
-    [SerializeField]Tile[] _tiles; 
-    
+    /// <summary>
+    /// Grid Tilemap Propery
+    /// </summary>
     public Tilemap GameBoardTileMap { get; private set; }
 
 
     [Header("UI SETTINGS")]
+    [SerializeField]Tile[] _tiles; 
     [SerializeField] Sprite[] _restartButtonSprites;
     [SerializeField]TMP_Text _timeCounterText;
     [SerializeField]TMP_Text _remainingMinesCountText;
     [SerializeField]Button _restartButton;
+    [SerializeField] TMP_Text _instructionText;
+    [SerializeField] Toggle _autoPlayToggle;
 
 
     private void Awake()
@@ -38,9 +45,12 @@ public class GameBoardView : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Update the Gameboard based on Current Game State
+    /// </summary>
+    /// <param name="currentBoardState"></param>
     public void UpdateGameBoard(Block[,] currentBoardState)
     {
-
               
         int width = currentBoardState.GetLength(0);
         int height = currentBoardState.GetLength(1);
@@ -57,6 +67,11 @@ public class GameBoardView : MonoBehaviour
 
 
 
+    /// <summary>
+    /// Get the Required TileAsset from Array of Tiles for Placement
+    /// </summary>
+    /// <param name="block"></param>
+    /// <returns></returns>
      Tile GetCorrespondingTile(Block block)
     {
         if(block.isBlockRevealed)
@@ -75,6 +90,11 @@ public class GameBoardView : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Get the Revealed tile, Because Each Revealed tile has it's own function. So this function is responsible retreiving the revealed tile.
+    /// </summary>
+    /// <param name="block"></param>
+    /// <returns></returns>
     Tile GetRevealedTile(Block block)
     {
         switch (block._blockType) 
@@ -93,6 +113,11 @@ public class GameBoardView : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Get Numbered Tile based on adjacent mines count
+    /// </summary>
+    /// <param name="block"></param>
+    /// <returns></returns>
     Tile GetNumberedTile(Block block)
     {
         if (block._number < 1 && block._number > 8)
@@ -102,11 +127,22 @@ public class GameBoardView : MonoBehaviour
 
     }
 
-
+    /// <summary>
+    /// Update Time Counter
+    /// </summary>
+    /// <param name="timer"></param>
     public void UpdateGameBoardTimeCounter(int timer)=>_timeCounterText.text = string.Format("{0:000}", timer);
     
+    /// <summary>
+    /// Update Remaining Mines Count
+    /// </summary>
+    /// <param name="count"></param>
     public void UpdateRemainingMinesCount(int count) => _remainingMinesCountText.text = string.Format("{0:000}", count);
 
+    /// <summary>
+    /// Restart Button Listener Assignment
+    /// </summary>
+    /// <param name="action"></param>
     public void AssignListenerToRestartButton(UnityAction action)
     {
         if(_restartButton)
@@ -117,6 +153,12 @@ public class GameBoardView : MonoBehaviour
 
         _restartButton.onClick.AddListener(action);
     }
+
+    /// <summary>
+    /// Update Status of Restart Button on Different Game Result States.
+    /// </summary>
+    /// <param name="isWin"></param>
+    /// <param name="isDefault"></param>
     public void UpdateRestartButtonWinLoseStatus(bool isWin,bool isDefault=false)
     {
         if (isDefault)
@@ -133,5 +175,32 @@ public class GameBoardView : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Update Instruction Text
+    /// </summary>
+    /// <param name="instructionMessage"></param>
+    public void UpdateInstructionText(string instructionMessage)
+    {
+        _instructionText.text = instructionMessage;
+    }
+
+    /// <summary>
+    /// Get Autoplay Toggle isOn boolean
+    /// </summary>
+    /// <returns></returns>
+    public bool GetAutoPlayToggleStatus()
+    {
+        return _autoPlayToggle.isOn;
+    }
+
+    
+    /// <summary>
+    /// Update Interactable status of Autoplay Toggle
+    /// </summary>
+    /// <param name="isInteractable"></param>
+    public void UpdateAutoplayToggleStatus(bool isInteractable)
+    {
+        _autoPlayToggle.interactable = isInteractable;
+    }
 
 }

@@ -1,19 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
+/// <summary>
+/// Autoplay Manager Uses Command Pattern to perform each operation for Auto Gameplay.
+/// </summary>
 public class AutoPlayCommandManager : MonoBehaviour
 {
-
+    [Header("SETTINGS")]
     [SerializeField] GameController _gameController;
+    [SerializeField][Tooltip("Change this value to manage speed of running steps for Autoplay Feature")] float _timeDelayInBetweenCommands = 0.5f;
+
 
     Command m_currentCommand;
-    
     Queue<Command> m_commandsInQueue = new Queue<Command>();
-
-    [SerializeField] bool isAutoPlayEnabled = false;
-    [SerializeField] float _timeDelayInBetweenCommands = 0.5f;
-
 
     float m_currentDelayTimer = 0f;
 
@@ -28,32 +27,47 @@ public class AutoPlayCommandManager : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Auto Play Command Management.
+    /// Checking whether any command is pending in the queue or not and execute those accordingly.
+    /// </summary>
     void AutoplayCommands()
     {
 
-        if (!isAutoPlayEnabled)
+        if (_gameController == null)
             return;
+
+        if (!_gameController.GetStatusGameStartedAutoPlay())
+        {
+            return;
+        }
+        
+
+
+        if (!_gameController.GetAutoPlayStatus())
+            return;
+
 
 
 
         if (m_currentCommand != null)
         {
+            //Time delay in between Execution of Commands
+
+            m_currentDelayTimer += Time.deltaTime;
+
+            if (m_currentDelayTimer < _timeDelayInBetweenCommands)
+                return;
+
+
             if (m_currentCommand.IsExecuting)
             {
-
-                Debug.Log($"Command {m_currentCommand.CommandName} Still Executing!!");
                 m_currentCommand.Execute(_gameController);
 
                 UpdateCommands(_gameController);
 
                 return;
             }
-
-
-            m_currentDelayTimer += Time.deltaTime;
-
-            if (m_currentDelayTimer < _timeDelayInBetweenCommands)
-                return;
 
         }
 
@@ -64,7 +78,6 @@ public class AutoPlayCommandManager : MonoBehaviour
 
         if (m_commandsInQueue.Count == 0)
         {
-            Debug.Log("NO COMMAND AVAILABLE::");
             m_currentCommand = null;
             return;
         }
@@ -77,7 +90,11 @@ public class AutoPlayCommandManager : MonoBehaviour
 
     }
 
-
+    /// <summary>
+    /// Autoplay Command Selectio Logic, Chosing Random Command.
+    /// Checknig if it's set flag command than get the adjancy of number and choose random block to set flag.
+    /// </summary>
+    /// <param name="gameController"></param>
     void UpdateCommands(GameController gameController)
     {
         if (gameController == null)
@@ -86,12 +103,14 @@ public class AutoPlayCommandManager : MonoBehaviour
 
         if(gameController.GetStatusGameFinishedAutoPlay() || !gameController.GetStatusValidBlocksAvailableAutoPlay())
         {
-            isAutoPlayEnabled = false;
             m_currentCommand = null;
+            m_currentDelayTimer = 0f;
             m_commandsInQueue.Clear();
+            m_commandsInQueue.Enqueue(new RevealCommand());
             return;
         }
 
+        //Random Choosing Commands
         int randomCommandChooseNumber = Random.Range(0, 2);
 
         if (randomCommandChooseNumber == 0)
@@ -105,7 +124,7 @@ public class AutoPlayCommandManager : MonoBehaviour
             Block[,] currentGameState = gameController.GetCurrentStateAutoPlay();
 
 
-
+            //Checkind Adjancy and Setting Flag
             for(int i=0;i<currentGameState.GetLength(0);i++)
             {
                 for(int j=0;j<currentGameState.GetLength(1);j++)
@@ -135,9 +154,6 @@ public class AutoPlayCommandManager : MonoBehaviour
             m_commandsInQueue.Enqueue(new SetFlagCommand(xPos,yPos));
 
         }
-
-
-        Debug.Log("Added Command"+ randomCommandChooseNumber);
     }
 
 

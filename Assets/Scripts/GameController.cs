@@ -1,41 +1,52 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+/// <summary>
+/// Responsible for Overall Game Logic and Update States on GameBoard
+/// </summary>
 public class GameController : MonoBehaviour
 {
+    [Header("SETTINGS")]
+    [SerializeField] bool CanOpenAllMinesAtGameEnd;
     [SerializeField] GameInput _gameInput;
     [SerializeField] CameraController _cameraController;
-
     [SerializeField] TextAsset _levelData;
 
+
+    #region PRIVATE_VARIABLES
+
+
+    /// <summary>
+    /// Reference Of Level Data Asset (JSON FILE)
+    /// </summary>
     LevelData m_currentCachedLevelData;
-
-    int m_currentCachedWidth = 0;
-    int m_currentCachedHeight = 0;
-    int m_currentCachedMinesCount = 0;
-
 
     GameBoardView m_gameBoardView;
     Block[,] m_blocksCurrentGameState;
 
+    int m_currentCachedWidth = 0;
+    int m_currentCachedHeight = 0;
+    int m_currentCachedMinesCount = 0;
+    int m_currentFlaggedMinesCount = 0;
 
     bool IsGameStarted = false;
     bool IsGameOver = false;
-
-
     bool IsValidBlocksAvailable = false;
-
-    [Header("GAME SETTINGS")]
-    [SerializeField] bool CanOpenAllMinesAtGameEnd;
+    bool isAutoPlayEnabled =>m_gameBoardView.GetAutoPlayToggleStatus();
 
 
     float m_currentGameTimer = 0f;
-    int m_currentFlaggedMinesCount = 0;
 
+    #endregion
 
     private void Start()
     {
         m_gameBoardView = GetComponent<GameBoardView>();
+
+        m_gameBoardView.UpdateInstructionText($"Hold {_gameInput._cameraMoveKey} to Move The Camera\n" +
+            $"Hold {_gameInput._cameraZoomKey} to Zoom In-Out The Camera By Mouse Scroll");
+
         ExtractLevelData();
     }
 
@@ -58,10 +69,16 @@ public class GameController : MonoBehaviour
             return;
 
 
+
+
+
         m_currentGameTimer += Time.deltaTime;
 
         m_gameBoardView.UpdateGameBoardTimeCounter(Mathf.RoundToInt(m_currentGameTimer));
 
+
+        if (isAutoPlayEnabled)
+            return;
 
 
         if (_gameInput.IsBlockOpenKeyPressed)
@@ -82,6 +99,9 @@ public class GameController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Read JSON Data and fetching all the required details from it. 
+    /// </summary>
     void ExtractLevelData()
     {
         if (_levelData == null || string.IsNullOrEmpty(_levelData.text))
@@ -99,6 +119,9 @@ public class GameController : MonoBehaviour
         GenerateLevel(m_currentCachedLevelData._levelWidth, m_currentCachedLevelData._levelHeight);
     }
 
+    /// <summary>
+    /// Random Level Generation
+    /// </summary>
     void PopulateRandomLevelData()
     {
 
@@ -112,32 +135,50 @@ public class GameController : MonoBehaviour
         GenerateLevel(width, height);
     }
 
+
+    /// <summary>
+    /// Generate Level using either random data or Json data
+    /// </summary>
+    /// <param name="width"></param>
+    /// <param name="height"></param>
     void GenerateLevel(int width, int height)
     {
 
         IsGameStarted = true;
         IsGameOver = false;
 
+
+
         _cameraController.SetCameraDimension(width, height);
 
         m_blocksCurrentGameState = new Block[width, height];
 
+        //Generating Random Empty Block, Mine Blocks, Number Block
         GenerateBlocksOnGameBoard();
         GenerateRandomMinesOnGameBoard();
         GenerateNumbersOnGameBoard();
 
 
-        //m_gameBoardView.DrawGameUI(m_blocksCurrentGameState);
+        //Updating the Gameboard using Current Status and Timer,MineCounts,Winning Losing Status, Autoplay Toggle status, Restart Button Data
         m_gameBoardView.UpdateGameBoard(m_blocksCurrentGameState);
         m_gameBoardView.UpdateRemainingMinesCount(m_currentCachedMinesCount);
         m_gameBoardView.UpdateRestartButtonWinLoseStatus(true, true);
-        m_gameBoardView.AssignListenerToRestartButton(ExtractLevelData);
+        m_gameBoardView.AssignListenerToRestartButton(()=> 
+        {
+
+            m_gameBoardView.GameBoardTileMap.ClearAllTiles();
+            ExtractLevelData();     
+        
+        });
+        m_gameBoardView.UpdateAutoplayToggleStatus(false);
 
 
     }
 
 
-
+    /// <summary>
+    /// Blocks Generation On GameBoard
+    /// </summary>
     void GenerateBlocksOnGameBoard()
     {
         for (int x = 0; x < m_currentCachedWidth; x++)
@@ -150,7 +191,9 @@ public class GameController : MonoBehaviour
         }
     }
 
-
+    /// <summary>
+    /// Random Mine Blocks Generation By making sure not to consider the same block again logic
+    /// </summary>
     void GenerateRandomMinesOnGameBoard()
     {
         for (int i = 0; i < m_currentCachedMinesCount; i++)
@@ -181,7 +224,9 @@ public class GameController : MonoBehaviour
         }
     }
 
-
+    /// <summary>
+    /// Random Number Generation by using Nearby mines available information.
+    /// </summary>
     void GenerateNumbersOnGameBoard()
     {
         for (int x = 0; x < m_currentCachedWidth; x++)
@@ -208,6 +253,12 @@ public class GameController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Adjancy Mines Count. Helpful for Generating Numbers
+    /// </summary>
+    /// <param name="xPos"></param>
+    /// <param name="yPos"></param>
+    /// <returns></returns>
     int GetNearbyAdjacentMines(int xPos, int yPos)
     {
         int adjacentMinesCount = 0;
@@ -240,6 +291,9 @@ public class GameController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Set a Flag on GameBoard by making sure important conditions
+    /// </summary>
     void SetFlagOnGameBoard()
     {
         int xPos, yPos;
@@ -269,6 +323,9 @@ public class GameController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Reveal Clicked block and check what is underneath. If Nothing that It'll open all the empty blocks till numbers appears.
+    /// </summary>
     void RevealBlockOnGameBoard()
     {
         int xPos, yPos;
@@ -309,7 +366,10 @@ public class GameController : MonoBehaviour
     }
 
 
-
+    /// <summary>
+    /// Revealed a Mine and Losing Logic
+    /// </summary>
+    /// <param name="block"></param>
     void ExplodeMineOnGameBoard(Block block)
     {
         IsGameStarted = false;
@@ -322,14 +382,15 @@ public class GameController : MonoBehaviour
         m_blocksCurrentGameState[block._blockPositionInGrid.x, block._blockPositionInGrid.y] = block;
 
         m_gameBoardView.UpdateRestartButtonWinLoseStatus(false);
-
-        Debug.Log("Lose");
+        m_gameBoardView.UpdateAutoplayToggleStatus(true);
 
         if (CanOpenAllMinesAtGameEnd)
             RevealAllAvailableMines();
     }
 
-
+    /// <summary>
+    /// Extra function, If User wants to see all the available mine on Game End.
+    /// </summary>
     void RevealAllAvailableMines()
     {
         for (int i = 0; i < m_currentCachedWidth; i++)
@@ -349,6 +410,10 @@ public class GameController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Game Winning Logic
+    /// </summary>
+    /// <returns></returns>
     bool CheckGameWin()
     {
 
@@ -359,6 +424,7 @@ public class GameController : MonoBehaviour
             {
                 Block block = m_blocksCurrentGameState[i, j];
 
+                //Checking the logic, If there's some blocks available those are yet to be revealed and those are not mines.
                 if (block._blockType != BLOCK_TYPE.MINE && !block.isBlockRevealed)
                     return false;
             }
@@ -371,6 +437,7 @@ public class GameController : MonoBehaviour
         m_currentFlaggedMinesCount = 0;
 
         m_gameBoardView.UpdateRestartButtonWinLoseStatus(true);
+        m_gameBoardView.UpdateAutoplayToggleStatus(true);
 
 
         if (CanOpenAllMinesAtGameEnd)
@@ -382,7 +449,10 @@ public class GameController : MonoBehaviour
 
 
 
-
+    /// <summary>
+    /// Opening all the empty blocks near to it in all direction till founds any number
+    /// </summary>
+    /// <param name="block"></param>
     void OpenAdjacentEmptyBlocks(Block block)
     {
         if (block == null)
@@ -431,6 +501,12 @@ public class GameController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Get Block by MouseClick
+    /// </summary>
+    /// <param name="xPos"></param>
+    /// <param name="yPos"></param>
+    /// <returns></returns>
     Block GetBlockOverMousePosition(out int xPos, out int yPos)
     {
 
@@ -468,7 +544,14 @@ public class GameController : MonoBehaviour
     //------------------------------------------------AUTOPLAY FEATURE----------------------------------
 
 
+    #region AUTOPLAY_SPECIFIC_FUNCTIONS
 
+    /// <summary>
+    /// Get Random Block
+    /// </summary>
+    /// <param name="xPos"></param>
+    /// <param name="yPos"></param>
+    /// <returns></returns>
     Block GetBlockRandomelyAutoPlay(out int xPos, out int yPos)
     {
 
@@ -492,7 +575,10 @@ public class GameController : MonoBehaviour
         }
     }
 
-
+    /// <summary>
+    /// Reveal the Random Block
+    /// Same Function as before just uses random blocks
+    /// </summary>
     public void RevealRandomBlockAutoPlay()
     {
 
@@ -563,6 +649,11 @@ public class GameController : MonoBehaviour
     }
 
 
+   /// <summary>
+   /// Set Flag on Random Block but making sure if there's a number available and by using little knowledge of it.
+   /// </summary>
+   /// <param name="xPosition"></param>
+   /// <param name="yPosition"></param>
     public void SetFlagOnRandomBlockAutoPlay(int xPosition,int yPosition)
     {
 
@@ -606,52 +697,11 @@ public class GameController : MonoBehaviour
     }
 
 
-    public void SetFlagOnRandomBlockAutoPlay()
-    {
 
-
-        if (IsAllValidBlocksRevealed())
-        {
-            Debug.Log("ALL VALID BLOCKS ARE REVEALED!!");
-            return;
-        }
-
-        int xPos, yPos;
-        Block block = GetBlockRandomelyAutoPlay(out xPos, out yPos);
-
-
-        if (!MinesweeperUtility.IsValidIndex(xPos, yPos, m_currentCachedWidth, m_currentCachedHeight))
-        {
-
-            RevealRandomBlockAutoPlay();
-            return;
-        }
-
-
-
-        if (block.isBlockRevealed)
-        {
-            SetFlagOnRandomBlockAutoPlay();
-            return;
-        }
-
-
-        block.isBlockFlagged = !block.isBlockFlagged;
-        m_blocksCurrentGameState[xPos, yPos] = block;
-
-
-        if (block.isBlockFlagged)
-            m_currentFlaggedMinesCount++;
-        else
-            m_currentFlaggedMinesCount--;
-
-
-
-        m_gameBoardView.UpdateGameBoard(m_blocksCurrentGameState);
-
-        m_gameBoardView.UpdateRemainingMinesCount(m_currentCachedMinesCount - m_currentFlaggedMinesCount);
-    }
-
+    /// <summary>
+    /// Check if all the valid non-mine blocks are revealed or not
+    /// </summary>
+    /// <returns></returns>
     bool IsAllValidBlocksRevealed()
     {
         for(int i=0;i<m_currentCachedWidth;i++)
@@ -672,21 +722,57 @@ public class GameController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Get Status Of Valid Blocks Available or not. 
+    /// Valid Block means Which can be revealed without any harm.
+    /// </summary>
+    /// <returns></returns>
     public bool GetStatusValidBlocksAvailableAutoPlay()
     {
         return IsValidBlocksAvailable;
     }
 
+    /// <summary>
+    /// Get GameOver Status
+    /// </summary>
+    /// <returns></returns>
     public bool GetStatusGameFinishedAutoPlay()
     {
         return IsGameOver;
     }
 
+    /// <summary>
+    /// Get Game Start Status
+    /// </summary>
+    /// <returns></returns>
+    public bool GetStatusGameStartedAutoPlay()
+    {
+        return IsGameStarted;
+    }
+
+    /// <summary>
+    /// Get Current Gameboard State
+    /// </summary>
+    /// <returns></returns>
     public Block[,] GetCurrentStateAutoPlay()
     {
         return m_blocksCurrentGameState;
     }
 
+    /// <summary>
+    /// Get Status of Autoplay, Whether it is enabled or not
+    /// </summary>
+    /// <returns></returns>
+    public bool GetAutoPlayStatus()
+    {
+        return isAutoPlayEnabled;
+    }
+
+    /// <summary>
+    /// Get Adjancy blocks for AutoPlay Flagging by knowledge of numbers and nearby mines
+    /// </summary>
+    /// <param name="block"></param>
+    /// <returns></returns>
     public List<Block> GetAdjancyBlocksAutoPlay(Block block)
     {
 
@@ -717,4 +803,6 @@ public class GameController : MonoBehaviour
 
         return adjancyBlocks;
     }
+
+    #endregion
 }

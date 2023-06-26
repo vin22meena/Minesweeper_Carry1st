@@ -2,19 +2,31 @@ using System;
 using System.IO;
 using UnityEngine;
 
+/// <summary>
+/// Responsible for Generating, Handling JSON
+/// </summary>
 public class GameLevelJsonManager : MonoBehaviour
 {
 
     [SerializeField] LevelData _levelData;
 
+    /// <summary>
+    /// Readonly Min Value Threshold
+    /// </summary>
     public int _minGridValue=>4;
+
+    /// <summary>
+    /// Readonly Max Value Threshold
+    /// </summary>
     public int _maxGridValue =>64;
+
 
     private void OnValidate()
     {
         if(_levelData!=null)
         {
             
+            //Validation on Values while generating levels
             
             _levelData._levelWidth = Mathf.Clamp(_levelData._levelWidth, _minGridValue, _maxGridValue);
             _levelData._levelHeight = Mathf.Clamp(_levelData._levelHeight, _minGridValue, _maxGridValue);
@@ -27,6 +39,10 @@ public class GameLevelJsonManager : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Export JSON Function. Handles Json Creation, Modification.
+    /// </summary>
+    /// <returns></returns>
     public bool ExportLevelJSON()
     {
         try
@@ -70,6 +86,10 @@ public class GameLevelJsonManager : MonoBehaviour
     }
 
 }
+
+/// <summary>
+/// Level Data Serialized Class, Used for Data Serialization in Json
+/// </summary>
 [Serializable]
 public class LevelData
 {
